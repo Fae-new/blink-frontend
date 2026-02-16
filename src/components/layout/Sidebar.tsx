@@ -3,6 +3,7 @@ import { MdKeyboardArrowLeft, MdChevronRight, MdSearch } from 'react-icons/md';
 import { useUI } from '../../contexts/UIContext';
 import { UploadCollectionButton } from '../collections/UploadCollectionButton';
 import { CollectionTreeView } from '../collections/CollectionTreeView';
+import { AgentStatus } from '../agent/AgentStatus';
 
 export function Sidebar() {
   const { isSidebarCollapsed, toggleSidebar } = useUI();
@@ -52,6 +53,7 @@ export function Sidebar() {
       <div className="flex-1 overflow-auto">
         <CollectionTreeView searchQuery={searchQuery} />
       </div>
+      <AgentStatus />
     </div>
   );
 }

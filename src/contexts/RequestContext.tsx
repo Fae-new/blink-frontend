@@ -82,7 +82,27 @@ export function RequestProvider({ children }: { children: React.ReactNode }) {
         extraction_rules: workingCopy.extraction_rules,
       };
 
-      const response = await apiService.executeRequest(workingCopy.id, payload);
+      let response: ExecutionResponse;
+
+      // Check if URL targets localhost/private IP
+      const { agentService } = await import('../services/agentService');
+
+      if (agentService.isLocalUrl(workingCopy.url)) {
+        // Check if agent is running
+        const isAgentRunning = await agentService.checkHealth();
+
+        if (!isAgentRunning) {
+          // We can't prompt the modal directly from here easily without adding more state to context or firing an event.
+          // For now, we'll show a toast with a clear action message.
+          // Ideally, we could expose a way to open the modal via context, but let's stick to the plan of "Show error/prompt".
+          throw new Error('Local Agent is not running. Please download and start the agent to make localhost requests.');
+        }
+
+        response = await agentService.executeRequest(payload);
+      } else {
+        response = await apiService.executeRequest(workingCopy.id, payload);
+      }
+
       setResponseData(response);
 
       // Auto-token extraction logic (only for successful responses)
@@ -104,7 +124,7 @@ export function RequestProvider({ children }: { children: React.ReactNode }) {
 
       showToast('Request executed successfully', 'success');
     } catch (error: any) {
-      const message = error.userMessage || 'Failed to execute request';
+      const message = error.userMessage || error.message || 'Failed to execute request';
       showToast(message, 'error');
 
       // If we have error response data, show it
